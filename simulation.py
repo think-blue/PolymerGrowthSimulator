@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
+
 
 def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill_spawns_new, video, coloured, monomer_pool, l_exponent, d_exponent, l_naked):
 #this function simulates the growth of polymers it takes;
@@ -29,38 +30,41 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
 #
 # It returns an array with the lengths of all polymers in the system
 # (living and dead)
-
-
+	
+	
 #Now let's write a subfunction to make the histogram
+	#Prepare interactive plot
+	plt.ion()
+	ax = plt.subplot(111)
 	def make_histogram(living, dead, coupled, coloured, initial_monomer, current_monomer, time):
-		d = [living, dead, coupled]
+		
+		ax.clear()
+		d = np.hstack((living, dead, coupled))
 #calculate M_n, M_w and PDI
 		DPn = np.mean(d)
 		DPw = np.sum(np.square(d))/(DPn*d.shape[0])
-		PDI = Dpw/DPn
+		PDI = DPw/DPn
 		conversion = 1-current_monomer/initial_monomer
-		#**dlmwrite('polymerOutput.txt',[time, conversion, DPn, DPw, PDI], '-append');
-
+		#dlmwrite('polymerOutput.txt',[time, conversion, DPn, DPw, PDI], '-append');
 		if coloured == 0:
-			plt.hist(d, np.max(d)-min(d), bins='auto')
+			ax.hist(d, bins=int(np.max(d)-np.min(d)),facecolor='b')
 		else:
 			step = np.ceil((np.max(d)-np.min(d))/1000)
-			binEdges = np.arange(np.min(d)-0.5, step, np.max(d)+0.5)
-			living_counts = np.histogram(living, binEdges)[0]
-			dead_counts = np.histogram(dead, binEdges)[0]
-			coupled_counts = np.histogram(coupled, binEdges)[0]
-			midbins = binEdges[0:-1-1] + (binEdges[2:-1]-binEdges[1:-1-1])/2
-			if coupled = []:
-				pass
-				#bar(midbins,[dead_counts;living_counts]','stacked')
-            	#legend({'Dead','Living'});
-            else:
-            	pass
-            	#bar(midbins,[coupled_counts;dead_counts;living_counts]','stacked')
-            	#legend({'Terminated','Dead','Living'});
-        #xlabel('Length in units')
-	    #ylabel('Frequency')
-    	#title(strcat(' conversion=',num2str(conversion),' time=',num2str(time), ' PDI=',num2str(PDI),' DPn=',num2str(DPn),' DPw=',num2str(DPw)))   	
+			binEdges = np.arange(np.min(d)-0.5, np.max(d)+0.5, step)
+			midbins = binEdges[0:-1] + (binEdges[1:]-binEdges[0:-1])/2
+			if coupled.size == 0:
+				
+				ax.hist([dead,living],bins=midbins, histtype='bar',stacked=True,label=['Dead','Living'])
+			else:
+				ax.hist([coupled,dead,living],bins=midbins, histtype='bar', stacked=True, label=['Terminated','Dead','Living'])
+            
+		ax.set_xlabel('Length in units')
+		ax.set_ylabel('Frequency')
+		ax.set_title(['conversion=',conversion,'time=',time,'PDI=',PDI,'DPn=',DPn,'DPw=',DPw])
+		ax.legend()
+		
+		plt.pause(1e-40)
+		
 
 #setup file for output
 
@@ -68,19 +72,18 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
 	#fprintf(file,'%s\n','Time, Conversion, DPn, DPw, PDI');
 	#fclose(file);
 #the pool of living polymers is an array of 1's of the right size	
-	living = np.ones(1, number_of_molecules)
+	living = np.ones([number_of_molecules])
 #the pool of dead polymers 
-	dead = []
-	coupled = []
+	dead = np.array([])
+	coupled = np.array([])
 #if we're outputing video, set it all up
 	if video == 1:
+		pass
 		#v=VideoWriter('polymer_distribution_video.avi');
     	#open(v);	
-
-    initial_monomer_pool = monomer_pool
-    fig = plt.figure()
-    for t in range(time_sim):
-    	if living.shape[0]>0:
+	initial_monomer_pool = monomer_pool
+	for t in range(time_sim):
+		if living.shape[0]>0:
 #first make a random vector with uniform random numbers which will
 #decide the fate of each living polymer	
 			r = np.random.rand(living.shape[0])
@@ -108,40 +111,51 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
 #since the kill starts a new chain it uses up 1 monomer, so we
 #decrease the monomer pool
 				if monomer_pool>0:
-					new_dead = living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio)) & r>=p_growth*monomer_ratio)-1]
-					living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio)) & r>=p_growth*monomer_ratio)] = []
-	
+					new_dead = living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio))) & (r>=p_growth*monomer_ratio)]
+					living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio))) & (r>=p_growth*monomer_ratio)] = 1
+					number_killed = living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio))) & (r>=p_growth*monomer_ratio)].shape[0]
+					if number_killed>monomer_pool:
+						monomer_pool = 0
+					else:
+						monomer_pool = monomer_pool - number_killed
+		new_dead = living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio))) & (r>=p_growth*monomer_ratio)]
+		living = np.delete(living,np.where(living[(r<(p_growth*monomer_ratio+(p_death*monomer_ratio))) & (r>=p_growth*monomer_ratio)]))
 #So in the new system each dead chain chooses another chain from
 #the system (either living or dead) to attack
-        	which_chain_attacked_per_dead = np.ceil(np.random.rand(dead[0])*(dead.shape[0]+living.shape[0]));
+
+		which_chain_attacked_per_dead = np.ceil(np.random.rand(dead.shape[0])*(dead.shape[0]+living.shape[0]));
 #if the chosen chain is a dead one, we do nothing, so now only
 #consider when the chosen number is above the nunber of dead chains
 #let's implement this in a loop to consider each dead chain
 #individually
-        	
-        	still_dead = np.ones(dead.shape[0])
+		still_dead = np.ones(dead.shape[0])
 
-        	for dead_counter in range(dead.shape[0]):
+		for dead_counter in range(dead.shape[0]):
 #if it chooses to attack a living chain...
-				if which_chain_attacked_per_dead[dead_counter]>dead.shape[0]:
-					which_living_attacked = which_chain_attacked_per_dead[dead_counter]-dead.shape[0]
-					r_success = np.random.rand()
-#calculate the probability of sucess given the formula from Bryn
-					p_success = p_dead_react/(living[which_living_attacked]**np.min(living[which_living_attacked]*(l_exponent/l_naked), l_exponent)*dead[dead_counter]**np.min(dead[dead_counter]*(d_exponent/l_naked), d_exponent)) #the dead pool
-					
-					if r_success<p_success:
-						living[which_living_attacked] = living[which_living_attacked]+dead[dead_counter]
-						still_dead[dead_counter] = 0
+			if which_chain_attacked_per_dead[dead_counter]>dead.shape[0]:
+				which_living_attacked = int(which_chain_attacked_per_dead[dead_counter]-dead.shape[0]-1)
+				r_success = np.random.rand()
+#calculate the probability of sucess given the formula from Bryn				
+				p_success = p_dead_react/(living[which_living_attacked]**np.min([living[which_living_attacked]*(l_exponent/l_naked), l_exponent])*dead[dead_counter]**np.min([dead[dead_counter]*(d_exponent/l_naked), d_exponent])) #the dead pool
+				
+				if r_success<p_success:
+					living[which_living_attacked] = living[which_living_attacked]+dead[dead_counter]
+					still_dead[dead_counter] = 0
 
-			dead = dead[still_dead==1]
-			dead = [dead new_dead]
+		dead = dead[still_dead==1]
+		dead = np.hstack((dead, new_dead))
 
 		if video==1:
+			
 			make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool,t)	
 			#frame=getframe(gcf);
         	#writeVideo(v,frame);
-	distribution = [living dead coupled]
+	distribution = [living, dead, coupled]
+
 	make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool,t) 
+	plt.show(block=True)
+
 	#if video==1:
 		#close(v)
 	return distribution
+print(polymer(100,100,0.8,0.7,0.1,1,1,1,10,0.23,0.23,0.5))
