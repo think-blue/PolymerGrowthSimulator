@@ -27,6 +27,7 @@ function distribution=polymer(number_of_molecules, time_sim, p_growth, p_death, 
 % It returns an array with the lengths of all polymers in the system
 % (living and dead)
 
+rng(2,'twister')
 
 %Now let's write a subfunction to make the histogram
 function make_histogram(living, dead, coupled, coloured, initial_monomer, current_monomer, time)
@@ -70,6 +71,7 @@ living=ones(1, number_of_molecules);
 %the pool of dead polymers 
 dead=[];
 coupled=[];
+new_dead=[];
 %if we're outputing video, set it all up
 if video==1
     v=VideoWriter('polymer_distribution_video.avi');
@@ -78,11 +80,12 @@ end
 initial_monomer_pool=monomer_pool;
 figure;
 for t=1:time_sim
+    
     if size(living,2)>0
         
         %first make a random vector with uniform random numbers which will
         %decide the fate of each living polymer
-        r=rand(1, size(living,2));
+        r=rand(1, size(living,2));        
         %Now if the random number for a polymer is below p_growth, it will
         %grow.
         %%%%% LIVING GROWTH %%%%%
@@ -123,6 +126,7 @@ for t=1:time_sim
            end
         else
                 new_dead=living(and(r<(p_growth*monomer_ratio+(p_death*monomer_ratio)),r>=p_growth*monomer_ratio));
+                
                 living(and(r<(p_growth*monomer_ratio+(p_death*monomer_ratio)),r>=p_growth*monomer_ratio))=[];
         
             
@@ -131,6 +135,7 @@ for t=1:time_sim
         %So in the new system each dead chain chooses another chain from
         %the system (either living or dead) to attack
         which_chain_attacked_per_dead = ceil(rand(1, size(dead,2))*(size(dead,2)+size(living,2)));
+        
         %if the chosen chain is a dead one, we do nothing, so now only
         %consider when the chosen number is above the nunber of dead chains
         %let's implement this in a loop to consider each dead chain
@@ -139,6 +144,7 @@ for t=1:time_sim
         still_dead=ones(1, size(dead,2));
         
         for dead_counter=1:size(dead,2)
+            
             %if it chooses to attack a living chain...
             if which_chain_attacked_per_dead(dead_counter)>size(dead,2)
                 which_living_attacked=which_chain_attacked_per_dead(dead_counter)-size(dead,2);
@@ -153,7 +159,9 @@ for t=1:time_sim
                 end
             end
         end
+
         dead=dead(still_dead==1);
+
         
         
         %%%% OLD STUFF FROM DEAD ATTACKING IN THE OLD WAY %%%%%
@@ -227,8 +235,9 @@ for t=1:time_sim
 %         end
         %add the new dead to the dead
        dead=[dead new_dead];
+
       
-     end
+    end
     %if we're making a video, let's get on and do it
     if video==1
         make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool,t);
@@ -240,7 +249,9 @@ end
 distribution=[living dead coupled];
 %draw a histogram with 100 buckets
 make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool,t);
+
 if video==1
     close(v);
 end
+
 end
