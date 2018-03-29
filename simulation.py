@@ -77,6 +77,7 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
     # fclose(file);
     # the pool of living polymers is an array of 1's of the right size
     living = np.ones(number_of_molecules)
+    
     # the pool of dead polymers
     dead = np.array([])
     coupled = np.array([])
@@ -126,8 +127,12 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
                 # decrease the monomer pool
                 if monomer_pool > 0:
                     new_dead = living[(r < (p_growth * monomer_ratio + (p_death * monomer_ratio))) & (r >= p_growth * monomer_ratio)]
+ 
+                    
+                    
                     living[(r < (p_growth * monomer_ratio + (p_death * monomer_ratio))) & (
                     r >= p_growth * monomer_ratio)] = 1
+                    
                     number_killed = living[(r < (p_growth * monomer_ratio + (p_death * monomer_ratio))) & (
                     r >= p_growth * monomer_ratio)].shape[0]
                     if number_killed > monomer_pool:
@@ -142,7 +147,7 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
         # So in the new system each dead chain chooses another chain from
         # the system (either living or dead) to attack
 
-            which_chain_attacked_per_dead = np.floor(np.random.rand(dead.shape[0]) * (dead.shape[0] + living.shape[0]));
+            which_chain_attacked_per_dead = np.floor(np.random.rand(dead.shape[0]) * (dead.shape[0] + living.shape[0])).astype(int)
             
             
         # if the chosen chain is a dead one, we do nothing, so now only
@@ -150,29 +155,24 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
         # let's implement this in a loop to consider each dead chain
         # individually
             still_dead = np.ones(dead.shape[0])
+            #Dead that attack living chains as vampire, if it chooses to attack a living chain...
+            dead_vampiric = np.where(which_chain_attacked_per_dead>(dead.shape[0]-1))[0]
 
-
-            for dead_counter in range(dead.shape[0]):
-                
-            # if it chooses to attack a living chain...
-                if which_chain_attacked_per_dead[dead_counter] > (dead.shape[0]-1):
-                    which_living_attacked = int(which_chain_attacked_per_dead[dead_counter] - dead.shape[0])
-                    
-                    r_success = np.random.rand()
-                # calculate the probability of sucess given the formula from Bryn
-                    p_success = p_dead_react / (living[which_living_attacked] ** np.min(
-                        [living[which_living_attacked] * (l_exponent / l_naked), l_exponent]) * dead[
-                                                dead_counter] ** np.min(
-                        [dead[dead_counter] * (d_exponent / l_naked), d_exponent]))  # the dead pool
-
-                    if r_success < p_success:
-                        living[which_living_attacked] = living[which_living_attacked] + dead[dead_counter]
-                        still_dead[dead_counter] = 0
-
-        
+            which_living_attacked = which_chain_attacked_per_dead[dead_vampiric] - dead.shape[0]
             
-            dead = dead[still_dead == 1]
-
+            # calculate the probability of sucess given the formula from Bryn
+            r_success = np.random.rand(which_living_attacked.shape[0])
+            p_success = p_dead_react / (living[which_living_attacked] ** np.minimum(
+                        living[which_living_attacked] * (l_exponent / l_naked), l_exponent) * dead[dead_vampiric] ** np.minimum(
+                        dead[dead_vampiric] * (d_exponent / l_naked), d_exponent))  # the dead pool
+            
+            
+            if len(living[np.where(r_success<p_success)[0]])>0:                
+                            
+                living[np.where(r_success<p_success)] = living[np.where(r_success<p_success)] + dead[dead_vampiric[np.where(r_success<p_success)]]
+                still_dead[dead_vampiric[np.where(r_success<p_success)[0]]] = 0
+            
+            dead = dead[still_dead == 1]                
             dead = np.hstack((dead, new_dead))
 
 
@@ -193,4 +193,4 @@ def polymer(number_of_molecules, time_sim, p_growth, p_death, p_dead_react, kill
     return distribution
 
 
-print(polymer(10000, 100, 0.9, 0.2, 0.003, 0, 0, 0, -10000, 0.73, 0.23, 0.5))
+print(polymer(10000, 100, 0.9, 0.2, 0.003, 1, 0, 0, 10000, 0.73, 0.23, 0.5))
