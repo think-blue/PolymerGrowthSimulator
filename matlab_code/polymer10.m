@@ -154,7 +154,9 @@ for t=1:time_sim
 
                 p_success=p_dead_react/(living(which_living_attacked)^min(living(which_living_attacked)*(l_exponent/l_naked), l_exponent)*dead(dead_counter)^min(dead(dead_counter)*(d_exponent/l_naked), d_exponent));                %the dead pool
                 if r_success<p_success
+
                     living(which_living_attacked)=living(which_living_attacked)+dead(dead_counter);
+                    
                     still_dead(dead_counter)=0;
                 end
             end
