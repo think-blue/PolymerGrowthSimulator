@@ -45,11 +45,12 @@ def clip(ar):
     #  l_naked --> lol
     ar[8] = ar[8]
     #  kill_spawns_new --> boolean
-    ar[9] = 0
+    ar[9] = 1
     return ar
 
 def cost_function(arguments):
     arguments = clip(arguments)
+    print(arguments)
     sim_output = polymer(*arguments)
     return diff.get_difference(sim_output)
 
