@@ -60,7 +60,6 @@ function make_histogram(living, dead, coupled, coloured, initial_monomer, curren
     ylabel('Frequency')
     title(strcat(' conversion=',num2str(conversion),' time=',num2str(time), ' PDI=',num2str(PDI),' DPn=',num2str(DPn),' DPw=',num2str(DPw)))
 end
-
 %setup file for output
 %dlmwrite('polymerOutput.txt',{'Time','Conversion','DPn','DPw','PDI'});
 file=fopen('polymerOutput.txt','w');
@@ -149,6 +148,7 @@ for t=1:time_sim
             if which_chain_attacked_per_dead(dead_counter)>size(dead,2)
                 which_living_attacked=which_chain_attacked_per_dead(dead_counter)-size(dead,2);
                 r_success=rand();
+                
                 %calculate the probability of sucess given the formula from
                 %Bryn
 
@@ -161,6 +161,7 @@ for t=1:time_sim
                 end
             end
         end
+        
 
         dead=dead(still_dead==1);
 
@@ -255,5 +256,5 @@ make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_po
 if video==1
     close(v);
 end
-
+rand()
 end
