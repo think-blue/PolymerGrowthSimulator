@@ -5,9 +5,10 @@ import numpy as np
 def hill_climbing(cost):
     epsilon = 0.00002
     dims = 10
-    initial_step_sizes = np.ones(dims) * 0.2
+    # initial_step_sizes = np.ones(dims) * 0.2
+    initial_step_sizes = np.array([100,1000,0,0.05,0.05,0.05,0.1,0.1,0.1,0.2])
     some_acceleration = 1.2
-    current_point = np.array([1000, 100, 100, 0.9, 0.1, 0.4, 0.2,0.2, 0.2, 0])   # the zero-magnitude vector is common
+    current_point = np.array([50, 100, -100, 0.9, 0.05, 0.4, 0.2,0.2, 0.2, 0])   # the zero-magnitude vector is common
     step_size = initial_step_sizes   # a vector of all 1's is common
     acceleration = some_acceleration  # a value such as 1.2 is common
     candidate = np.zeros(5)
@@ -30,6 +31,7 @@ def hill_climbing(cost):
             for j in range(5):        # try each of 5 candidate locations
                 current_point[i] = current_point[i] + step_size[i] * candidate[j]
                 temp = cost(current_point)
+                print(current_point)
                 current_point[i] = current_point[i] - step_size[i] * candidate[j]
                 if temp < best_score:
                     best_score = temp
