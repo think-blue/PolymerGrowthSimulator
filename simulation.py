@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import time
 
 #Set seed for 'Mersenne Twister' rng
-np.random.seed(2)
+# np.random.seed(2)
 def polymer(time_sim, number_of_molecules, monomer_pool, p_growth, p_death, p_dead_react, l_exponent, d_exponent, l_naked, kill_spawns_new, video=0, coloured=1):
     # this function simulates the growth of polymers it takes;
     # number_of_molecules - the number of starting chains (length 1)
@@ -37,7 +37,8 @@ def polymer(time_sim, number_of_molecules, monomer_pool, p_growth, p_death, p_de
     # Now let's write a subfunction to make the histogram
     # Prepare interactive plot
     # plt.ion()
-    ax = plt.subplot(111)
+    if video:
+        ax = plt.subplot(111)
 
     def make_histogram(living, dead, coupled, coloured, initial_monomer, current_monomer, time):
 
@@ -194,9 +195,9 @@ def polymer(time_sim, number_of_molecules, monomer_pool, p_growth, p_death, p_de
         # writeVideo(v,frame);
     distribution = [living, dead, coupled]
     
-    
-    make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool, t)
-    plt.show(block=True)
+    if video:
+        make_histogram(living, dead, coupled, coloured, initial_monomer_pool, monomer_pool, t)
+        plt.show(block=True)
 
     # if video==1:
     # close(v)
