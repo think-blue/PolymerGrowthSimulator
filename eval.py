@@ -1,10 +1,9 @@
 from simulation import polymer
 from hill_climbing import hill_climbing
-from data_processing import Difference
+from data_processing import comparison
 import numpy as np
 
-
-diff =  Difference('polymer_20k.xlsx')
+diff =  comparison('polymer_20k.xlsx', polymer)
 
 def non_neg(x):
     return np.sqrt(x**2)
@@ -21,7 +20,7 @@ def prob(x):
     if x < 0:
         return 0
     elif x > 1:
-        return 1
+        return 0.99999
     return x
 
 def clip(ar):
@@ -45,13 +44,12 @@ def clip(ar):
     #  l_naked --> lol
     ar[8] = ar[8]
     #  kill_spawns_new --> boolean
-    ar[9] = 1
+    ar[9] = 0
     return ar
 
-def cost_function(arguments):
+def process_arguments(arguments):
     arguments = clip(arguments)
-    print(arguments)
-    sim_output = polymer(*arguments)
-    return diff.get_difference(sim_output)
+    print(arguments)    
+    return arguments
 
-hill_climbing(cost_function)
+hill_climbing(diff.get_difference, process_arguments)

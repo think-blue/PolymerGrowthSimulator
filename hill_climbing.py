@@ -2,13 +2,14 @@
 import numpy as np
 
 
-def hill_climbing(cost):
+def hill_climbing(diff_func, arg_func):
     epsilon = 0.00002
     dims = 10
     # initial_step_sizes = np.ones(dims) * 0.2
-    initial_step_sizes = np.array([100,1000,0,0.05,0.05,0.05,0.05,0.05,0.05,0.2])
-    some_acceleration = 1.2
-    current_point = np.array([1000, 10000, -100, 0.9, 0.05, 0.4, 0.2,0.2, 0.2, 0])   # the zero-magnitude vector is common
+    current_point = np.array([10000, 100000, 10000000, 0.5, 0.5, 0.5, 0.2,0.2, 0.2, 1])   # the zero-magnitude vector is common
+    initial_step_sizes = current_point/10
+    some_acceleration = 5.0
+
     step_size = initial_step_sizes   # a vector of all 1's is common
     acceleration = some_acceleration  # a value such as 1.2 is common
     candidate = np.zeros(5)
@@ -22,7 +23,7 @@ def hill_climbing(cost):
 
         iter+=1
         print("##### iter", iter, "#####")
-        before = cost(current_point)
+        before = diff_func(arg_func(current_point))
         acc_lowered = False
         for i in range(len(current_point)):
             print("##### param", i, "#####")
@@ -30,7 +31,7 @@ def hill_climbing(cost):
             best_score = 100000
             for j in range(5):        # try each of 5 candidate locations
                 current_point[i] = current_point[i] + step_size[i] * candidate[j]
-                temp = cost(current_point)
+                temp = diff_func(arg_func(current_point))
 
                 current_point[i] = current_point[i] - step_size[i] * candidate[j]
                 
@@ -44,27 +45,5 @@ def hill_climbing(cost):
                 current_point[i] = current_point[i] + step_size[i] * candidate[best]
                 step_size[i] = step_size[i] * candidate[best]  # accelerate            
 
-        if abs(cost(current_point) - before) < epsilon and not acc_lowered:
+        if abs(diff_func(arg_func(current_point)) - before) < epsilon and not acc_lowered:
             return current_point
-
-
-def func(X):
-    x = X[:,0]
-    y = X[:,1]
-    return (x)**2+(y)**2
-
-def mov_func(X):
-    x = X[:, 0]
-    y = X[:, 1]
-    return (x)**2+(y+2)**2
-
-def rosenbrock(X):
-    _a = 0
-    _b = 10
-    x = X[:,0]
-    y = X[:,1]
-    return pow(_a - y, 2) + _b * pow(y - x**2, 2)
-
-#res = hill_climbing(mov_func)
-
-#print(res)
