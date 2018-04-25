@@ -3,6 +3,7 @@ import numpy as np
 
 
 def hill_climbing(diff_func, arg_func):
+    param_names = ["time_sim","number_of_molecules", "monomer_pool", "p_growth", "p_death", "p_dead_react", "l_exponent", "d_exponent", "l_naked", "kill_spawns_new"]
     epsilon = 0.00002
     dims = 10
     # initial_step_sizes = np.ones(dims) * 0.2
@@ -20,30 +21,33 @@ def hill_climbing(diff_func, arg_func):
     candidate[4] = acceleration
     iter = 0
     while True:
-
         iter+=1
         print("##### iter", iter, "#####")
         before = diff_func(arg_func(current_point))
+        for x in range(len(current_point)):
+            print("{}:{}; ".format(param_names[x], current_point[x]))
+        print("solution cost:", before)
         acc_lowered = False
         for i in range(len(current_point)):
-            print("##### param", i, "#####")
+            print("##### param", param_names[i], "#####")
             best = -1
             best_score = 100000
             for j in range(5):        # try each of 5 candidate locations
                 current_point[i] = current_point[i] + step_size[i] * candidate[j]
                 temp = diff_func(arg_func(current_point))
-
+                print("{}: val: {}, cost: {}".format(j, current_point[i], temp))
                 current_point[i] = current_point[i] - step_size[i] * candidate[j]
-                
+
                 if temp < best_score:
                     best_score = temp
                     best = j
+            print("keeping option {}".format(best))
             if candidate[best] == 0:
                 step_size[i] = step_size[i] / acceleration
                 acc_lowered = True
             else:
                 current_point[i] = current_point[i] + step_size[i] * candidate[best]
-                step_size[i] = step_size[i] * candidate[best]  # accelerate            
+                step_size[i] = step_size[i] * candidate[best]  # accelerate
 
         if abs(diff_func(arg_func(current_point)) - before) < epsilon and not acc_lowered:
             return current_point

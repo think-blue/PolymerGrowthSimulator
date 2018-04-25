@@ -49,7 +49,8 @@ def clip(ar):
 
 def process_arguments(arguments):
     arguments = clip(arguments)
-    print(arguments)    
+    # print(arguments)
     return arguments
 
-hill_climbing(diff.get_difference, process_arguments)
+if __name__ == '__main__':
+    hill_climbing(diff.get_difference, process_arguments)

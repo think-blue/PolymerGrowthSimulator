@@ -83,7 +83,7 @@ def polymer(time_sim, number_of_molecules, monomer_pool, p_growth, p_death, p_de
     # fprintf(file,'%s\n','Time, Conversion, DPn, DPw, PDI');
     # fclose(file);
     # the pool of living polymers is an array of 1's of the right size
-    living = np.ones(number_of_molecules)
+    living = np.ones(int(number_of_molecules))
     
     # the pool of dead polymers
     dead = np.array([])
@@ -95,7 +95,7 @@ def polymer(time_sim, number_of_molecules, monomer_pool, p_growth, p_death, p_de
     # v=VideoWriter('polymer_distribution_video.avi');
     # open(v);
     initial_monomer_pool = monomer_pool
-    for t in range(time_sim):
+    for t in range(int(time_sim)):
         if living.shape[0] > 0:
             # first make a random vector with uniform random numbers which will
             # decide the fate of each living polymer
